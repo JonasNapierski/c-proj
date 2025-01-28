@@ -21,11 +21,20 @@ int main() {
         {".",".",".",".","8",".",".","7","9"}
     };
 
-
-    for(int i = 0; i<9; i++)
-    {
-        printf("%s", board[0][i]);
+    for (int y = 0; y < 9; y++) {
+        if (y % 3 == 0) {
+            printf("+---+---+---+\n");
+        }
+        for(int i = 0; i<9; i++) {
+            if (i % 3 == 0) {
+                printf("|%s", board[y][i]);
+            }else {
+                printf("%s",board[y][i]);
+            }
+        }
+        printf("|\n");
     }
+    printf("+---+---+---+\n");
     
 
 }
