@@ -1,89 +1,87 @@
+#include "hello_world.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "hello_world.h"
 
-char* addBinary(char* a, char* b) {
-    int aIndex = strlen(a)-1;
-    int bIndex = strlen(b)-1;
+char *addBinary(char *a, char *b) {
+    int sizeA = strlen(a) - 1;
+    int sizeB = strlen(b) - 1;
 
     char cmpA = '0';
     char cmpB = '0';
     char head = '0';
 
-    int resIndex = aIndex;
+    int resIndex = (sizeA < sizeB ? sizeB : sizeA) + 2;
 
-    if (resIndex < bIndex) {
-        resIndex = bIndex;
+    char *buffer = (char *)malloc(resIndex);
+    for (int i = 0; i < resIndex; i++) {
+        buffer[i] = '0';
     }
 
-    resIndex = resIndex+1;
+    buffer[resIndex--] = '\0';
 
+    while (sizeA >= 0 || sizeB >= 0 || (resIndex >= 0 && head == '1')) {
+        cmpA = sizeA < 0 ? '0' : a[sizeA];
+        cmpB = sizeB < 0 ? '0' : b[sizeB];
 
-    char *buffer = malloc((resIndex+1)*sizeof(char));
-    
-    for (int i = 0; i < resIndex; i++){
-        buffer[i] = ' ';
-    }
-
-    buffer[resIndex+1] = '\0';
-    
-    while (aIndex >= 0 || bIndex >= 0 || (resIndex >= 0 && head == '1')) {
-
-        if (aIndex < 0) {
-           cmpA = '0'; 
-        }else {
-           cmpA = a[aIndex];
-        }
-
-        if (bIndex < 0) {
-            cmpB = '0';
-        }else{
-            cmpB = b[bIndex];
-        }
-
-        printf("A: %i(%c), B: %i(%c) S: %s\n",aIndex, cmpA,bIndex, cmpB,buffer);
-
-        if (cmpA == '1' && cmpB == '1') {
-            if (head == '1'){
+        if ((cmpA == '1' && cmpB == '1') ||
+            ((cmpA == '1' || cmpB == '1') && head == '1')) {
+            if (head == '1' && cmpA == '1' && cmpB == '1') {
                 buffer[resIndex] = '1';
-            }else{
+            } else {
                 buffer[resIndex] = '0';
             }
             head = '1';
-        }else if ((cmpA == '0' || cmpB == '0' || head == '0') && (cmpA == '1' || cmpB == '1' || head == '1')) {
+        } else if ((cmpA == '0' || cmpB == '0' || head == '0') &&
+            (cmpA == '1' || cmpB == '1' || head == '1')) {
             head = '0';
             buffer[resIndex] = '1';
-        }else {
+        } else {
             buffer[resIndex] = '0';
             head = '0';
         }
 
-        --resIndex;
-        --aIndex;
-        --bIndex;
+        resIndex--;
+        sizeA--;
+        sizeB--;
     }
 
-
-    int j = 0;
-
-    while (buffer[j] == ' ') j++;
-
-    char *res = malloc((strlen(buffer) - j)* sizeof(char));
-
-    strcpy(res,buffer+j+1);
-
+    char *res = (char *)strdup(buffer + (buffer[0] == '0' ? 1 : 0));
+    if (!res)
+        return NULL;
     free(buffer);
-    buffer = NULL;
 
     return res;
-
 }
 
-int main(){
-    
-    char* b = addBinary("1000", "1");
-    printf("(%s)\n", b); 
+char *addBinaryWorking(char *a, char *b) {
+    int sizeA = strlen(a);
+    int sizeB = strlen(b);
+    int sizeOutput = (sizeA > sizeB ? sizeA : sizeB) + 1;
+    char *output = (char *)malloc(sizeOutput + 1);
+    int sum = 0;
 
+    output[sizeOutput] = '\0';
+
+    while (sizeA > 0 || sizeB > 0 || sum > 0) {
+
+        if (sizeA > 0) {
+            sum += a[--sizeA] - '0';
+        }
+        if (sizeB > 0) {
+            sum += b[--sizeB] - '0';
+        }
+        output[--sizeOutput] = sum % 2 + '0';
+        sum /= 2;
+    }
+    return output + sizeOutput;
+}
+
+int main() {
+    char *b = addBinary("10", "1011");
+    char *c = addBinary("1111", "1");
+    free(b);
+    free(c);
+    b = NULL;
     return 0;
 }
