@@ -51,10 +51,7 @@ int main() {
     while(buffer[i] != '\n')
     {
         if ( ',' == buffer[i]) {
-
-            header_name = (char*)malloc(sizeof(char)* (i- column_start));
-
-            //strncpy((header[column_cursor]), (buffer+column_start), i - column_start);
+            header_name = strndup(&buffer[column_start], i - column_start);
             header[column_cursor] = header_name;
             column_cursor++;
             printf("Create memory for: %i - %i (size: %i)\n", column_start, i, (i - column_start));
@@ -62,17 +59,17 @@ int main() {
         }
         i++;
     }
-    printf("Create memory for: %i - %i (size: %i)\n", column_start, i, (i - column_start));
-    header_name = (char*)malloc(sizeof(char)* (i - column_start));
 
-    *(header+column_cursor) = header_name;
+    printf("Create memory for: %i - %i (size: %i)\n", column_start, i, (i - column_start));
+    header_name = strndup(&buffer[column_start], i - column_start);
+    header[column_cursor] = header_name;
     column_cursor=0;
 
     
     printf("Clean up memory after use\n");
     for (int e = 0; e < columns; e++)
     {
-        printf("free %i\n", e);
+        printf("Print header %i: %s\n", e, header[e]);
         free(header[e]);
     }
     free(header);
