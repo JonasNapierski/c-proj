@@ -5,75 +5,102 @@
 
 #define BUFFER_SIZE 4096
 
+typedef struct{
+    int columns;
+    int rows;
+    char **header;
+    char ***values;
+} csv;
+
+int csv_load(csv *csv, FILE *file);
+int csv_destroy(csv *csv);
 
 int main() {
     printf("Start loading file './test.csv'\n");
     FILE *csv_file = fopen("./test.csv", "r");
 
-    if (!csv_file) {
+    csv content = { 0, 0, NULL, NULL };
+
+    printf("Pre csv_load\n");
+    csv_load(&content, csv_file);
+
+    fclose(csv_file);
+
+    printf("Close file. Content read into buffer\n");
+    
+    
+    return 0;
+}
+
+int csv_load(csv *csv, FILE *file) {
+
+    if (!file) {
         perror("fopen failed. This may be caused due to missing permission or an non existing file.");
         return EXIT_FAILURE;
     }
 
-    size_t ret;
     char buffer[BUFFER_SIZE]; 
-    size_t succ_read = fread(buffer, sizeof(*buffer), BUFFER_SIZE, csv_file);
+    size_t ret;
 
-
-    printf("Close file. Content read into buffer\n");
-    fclose(csv_file);
+    ret = fread(buffer, sizeof(*buffer), BUFFER_SIZE, file);
+    fclose(file);
 
     int i = 0;
     
-    int columns = 0;
-    int rows = 0;
-    while(buffer[i] != '\n')
-    {
-        if (',' == buffer[i]) columns++;
+    // prep csv object
+    printf("Does this work\n");
+    csv->rows = 0;
+    csv->columns = 0;
 
+    int column_cursor = 0;
+    while (buffer[i] != '\0')
+    {
+        if ('\n' == buffer[i]) csv->rows++;
+        if (',' == buffer[i]) csv->columns++;
         i++;
     }
-
-    if (columns != 0) columns++;
-    if (rows < 0) rows--;
-
-    printf("Columns: %i\n", columns);
-    char **header = (char**)malloc(sizeof(char*) * columns);
-
-    if (header == NULL) return EXIT_FAILURE;
-    char *valeus[columns][rows]; 
+    if (csv->columns != 0) csv->columns++;
+    csv->header = (char**)malloc(sizeof(char*) * csv->columns);
+    csv->values = (char***)malloc(sizeof(char**) * csv->columns);
 
     i = 0;
-    int column_cursor = 0;
     int column_start = 0;
-
-    char *header_name;
-    while(buffer[i] != '\n')
+    int rows = -1;
+    while(buffer[i] != '\0')
     {
-        if ( ',' == buffer[i]) {
-            header_name = strndup(&buffer[column_start], i - column_start);
-            header[column_cursor] = header_name;
-            column_cursor++;
-            printf("Create memory for: %i - %i (size: %i)\n", column_start, i, (i - column_start));
-            column_start = i+1;
+        if (',' == buffer[i]) {
+            if (rows == -1) {
+                char *cell_content = strndup(&buffer[column_start], i - column_start);
+                csv->header[column_cursor] = cell_content;
+                column_cursor++;
+                column_start = i+1;
+            }
+        }
+
+        if ('\n' == buffer[i]) {
+            if (rows == -1)
+            {
+                char *header_name = strndup(&buffer[column_start], i - column_start);
+                csv->header[column_cursor] = header_name;
+            }
         }
         i++;
     }
 
-    printf("Create memory for: %i - %i (size: %i)\n", column_start, i, (i - column_start));
-    header_name = strndup(&buffer[column_start], i - column_start);
-    header[column_cursor] = header_name;
-    column_cursor=0;
 
-    
+    if (csv->header == NULL) return EXIT_FAILURE;
+    csv->header[column_cursor] = strndup(&buffer[column_start], i - column_start);
+    column_cursor=0;
+}
+
+int csv_destroy(csv *csv) {
     printf("Clean up memory after use\n");
-    for (int e = 0; e < columns; e++)
+    for (int e = 0; e < csv->columns; e++)
     {
-        printf("Print header %i: %s\n", e, header[e]);
-        free(header[e]);
+        printf("Print header %i: %s\n", e, csv->header[e]);
+        free(csv->header[e]);
     }
-    free(header);
+    free(csv->header);
     printf("End of cleaning\n");
-    
-    return 0;
+    return EXIT_SUCCESS;
 }
