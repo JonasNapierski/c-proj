@@ -27,6 +27,11 @@ int main() {
     printf("Close file. Content read into buffer\n");
     fclose(csv_file);
 
+
+    printf("Rows: %i\n", content.rows);
+    printf("Columns: %i\n", content.columns);
+    printf("Last Element: %s\n", content.header[2]);
+
     csv_destroy(&content); 
     
     return 0;
@@ -47,7 +52,7 @@ int csv_load(csv *csv, FILE *file) {
     int i = 0;
     
     // prep csv object
-    csv->rows = 0;
+    csv->rows = -1;
     csv->columns = 0;
 
     int column_cursor = 0;
@@ -98,10 +103,13 @@ int csv_load(csv *csv, FILE *file) {
         i++;
     }
 
-    if (csv->header == NULL) return EXIT_FAILURE;
-    //csv->header[column_cursor] = strndup(&buffer[column_start], i - column_start);
-    column_cursor=0;
 
+    if (current_row == -1) {
+        csv->header[column_cursor] = strndup(&buffer[column_start], i - column_start);
+    } else {
+        csv->values[column_cursor][current_row] = strndup(&buffer[column_start], i - column_start);
+    }
+    
     return 0;
 }
 
@@ -114,7 +122,7 @@ int csv_destroy(csv *csv) {
         for (int u = 0; u < csv->rows; u++) {
             free(csv->values[e][u]);
         }
-        free(csv->values[e]);
+        //free(csv->values[e]);
     }
     free(csv->header);
     free(csv->values);
