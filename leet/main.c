@@ -24,10 +24,10 @@ int main() {
     printf("Pre csv_load\n");
     csv_load(&content, csv_file);
 
+    printf("Close file. Content read into buffer\n");
     fclose(csv_file);
 
-    printf("Close file. Content read into buffer\n");
-    
+    csv_destroy(&content); 
     
     return 0;
 }
@@ -43,12 +43,10 @@ int csv_load(csv *csv, FILE *file) {
     size_t ret;
 
     ret = fread(buffer, sizeof(*buffer), BUFFER_SIZE, file);
-    fclose(file);
 
     int i = 0;
     
     // prep csv object
-    printf("Does this work\n");
     csv->rows = 0;
     csv->columns = 0;
 
@@ -56,9 +54,10 @@ int csv_load(csv *csv, FILE *file) {
     while (buffer[i] != '\0')
     {
         if ('\n' == buffer[i]) csv->rows++;
-        if (',' == buffer[i]) csv->columns++;
+        if ( !csv->rows && ',' == buffer[i]) csv->columns++;
         i++;
     }
+
     if (csv->columns != 0) csv->columns++;
     csv->header = (char**)malloc(sizeof(char*) * csv->columns);
     csv->values = (char***)malloc(sizeof(char**) * csv->columns);
@@ -83,14 +82,16 @@ int csv_load(csv *csv, FILE *file) {
                 char *header_name = strndup(&buffer[column_start], i - column_start);
                 csv->header[column_cursor] = header_name;
             }
+            rows++;
         }
         i++;
     }
 
-
     if (csv->header == NULL) return EXIT_FAILURE;
     csv->header[column_cursor] = strndup(&buffer[column_start], i - column_start);
     column_cursor=0;
+
+    return 0;
 }
 
 int csv_destroy(csv *csv) {
