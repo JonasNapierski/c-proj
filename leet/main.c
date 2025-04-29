@@ -62,33 +62,44 @@ int csv_load(csv *csv, FILE *file) {
     csv->header = (char**)malloc(sizeof(char*) * csv->columns);
     csv->values = (char***)malloc(sizeof(char**) * csv->columns);
 
+    for(int x = 0; x < csv->columns; x++) {
+            csv->values[x] = (char**)malloc(sizeof(char*) * csv->rows);
+    }
+
     i = 0;
     int column_start = 0;
-    int rows = -1;
+    int current_row = -1;
     while(buffer[i] != '\0')
     {
         if (',' == buffer[i]) {
-            if (rows == -1) {
-                char *cell_content = strndup(&buffer[column_start], i - column_start);
+            char *cell_content = strndup(&buffer[column_start], i - column_start);
+            if (current_row == -1) {
                 csv->header[column_cursor] = cell_content;
-                column_cursor++;
-                column_start = i+1;
+            }else{
+                csv->values[column_cursor][current_row] = cell_content;
             }
+            column_cursor++;
+            column_start = i+1;
         }
 
         if ('\n' == buffer[i]) {
-            if (rows == -1)
-            {
-                char *header_name = strndup(&buffer[column_start], i - column_start);
-                csv->header[column_cursor] = header_name;
+            char *cell_content = strndup(&buffer[column_start], i - column_start);
+
+            if (current_row == -1) {
+                csv->header[column_cursor] = cell_content;
+            } else {
+                csv->values[column_cursor][current_row] = cell_content;
             }
-            rows++;
+
+            column_cursor = 0;
+            column_start = i+1;
+            current_row++;
         }
         i++;
     }
 
     if (csv->header == NULL) return EXIT_FAILURE;
-    csv->header[column_cursor] = strndup(&buffer[column_start], i - column_start);
+    //csv->header[column_cursor] = strndup(&buffer[column_start], i - column_start);
     column_cursor=0;
 
     return 0;
@@ -100,8 +111,13 @@ int csv_destroy(csv *csv) {
     {
         printf("Print header %i: %s\n", e, csv->header[e]);
         free(csv->header[e]);
+        for (int u = 0; u < csv->rows; u++) {
+            free(csv->values[e][u]);
+        }
+        free(csv->values[e]);
     }
     free(csv->header);
+    free(csv->values);
     printf("End of cleaning\n");
     return EXIT_SUCCESS;
 }
