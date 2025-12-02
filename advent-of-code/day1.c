@@ -15,6 +15,7 @@ int main()
     
     char buf[256];
 
+    int countEachZero = 0;
     int count = 0;
     int position = 50;
     while(fgets(buf, sizeof(buf), file)) {
@@ -39,11 +40,16 @@ int main()
             if (position > 99) {
                 position = 0;
             }
+
+            if (position == 0){
+                countEachZero++;
+        printf("+ Line: %s   %i\n", buf, countEachZero);
+            }
         }
 
-        printf("Line: %s   %i   Position: %i\n", buf, number,position);
         if (position == 0) {
             count++;
+            //countEachZero++;
         }
 
     }
@@ -51,6 +57,7 @@ int main()
     fclose(file);
 
     printf("Zero was %i times includes\n", count);
+    printf("Each Zero was %i times includes\n", countEachZero);
 
 
     return 0;
